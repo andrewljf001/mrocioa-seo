@@ -18,6 +18,8 @@ mrocioa-seo/
 ├── research/
 │   ├── keywords.md            # 关键词调研
 │   └── competitors.md         # 竞品分析
+├── marketing/
+│   └── google-ads-first-campaign.md  # 首个 Google 广告执行方案
 └── reports/
     └── 2026-05.md             # 月度数据报告
 ```
@@ -37,6 +39,7 @@ mrocioa-seo/
 - 🔍 [keywords.md](research/keywords.md) — 关键词调研
 - 🏆 [competitors.md](research/competitors.md) — 竞品分析
 - 📈 [2026-05.md](reports/2026-05.md) — 月度报告
+- 🚀 [google-ads-first-campaign.md](marketing/google-ads-first-campaign.md) — 首个 Google 广告执行方案
 
 ## AI 分工
 
