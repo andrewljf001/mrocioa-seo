@@ -12,6 +12,8 @@ Release 1.0 正式源码：顶部状态栏 + 多串口会话、左侧连接配�
 - `SidebarConfig.jsx` — 连接配置 + 快捷发送 + 脚本
 - `MonitorPanel.jsx` — 终端监视 + 发送区
 - `PlotPanel.jsx` — 实时多通道波形图
-- `ProtocolPanel.jsx` — 协议解析（AT / I²C / SPI / EDID / CEC 解码表）
+- `ProtocolPanel.jsx` — 串口内容与通讯调试日志解析（AT、NMEA、Modbus、IR、CEC、I²C、SPI、UART/RS-485、1-Wire、CAN、LIN、DMX/RDM、EDID 等）
 
 正式版支持真实 Web Serial 授权与收发、多会话、HEX/ASCII、记录导出、自动发送、图表和协议解析。串口数据仅在浏览器本机处理。
+
+开发中的下一版本范围记录在 [NEXT-RELEASE.md](NEXT-RELEASE.md)。`CHANGELOG.md` 只记录已经正式发行的版本。
