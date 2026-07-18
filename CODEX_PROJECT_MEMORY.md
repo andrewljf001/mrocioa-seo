@@ -12,10 +12,11 @@
 
 - Web Serial Debugger 已拆分到独立产品目录：`/Users/lijianfeng/Documents/mrocioa网页优化/mrocioa-serial-tool`。
 - 私有仓库：`https://github.com/andrewljf001/mrocioa-serial-tool`。
-- 当前正式迁移基线：提交 `0afa0af`，标签 `serial-tool-v1.0.1`。
+- 当前正式版本：`1.0.2`；网站部署来源提交 `cc6c8fd`，发行标签 `serial-tool-v1.0.2`。
 - 串口功能、设计、测试、版本和未来协同服务只在独立产品仓库开发。
 - 本 `mrocioa-seo` 仓库只保留正式 WordPress Adapter、打包 HTML、来源说明和 SHA-256 部署记录。
 - 不直接修改网站仓库或 VPS 中的串口部署副本；先在产品仓库完成、测试、验收和发行，再同步部署文件。
+- 远程协同界面遵循 Host-authoritative Viewer：远端完整同步测试主机的布局、图表、色彩和状态；无权限控件只以灰色禁用显示。
 - 详细入口：`wp/SERIAL-TOOL-UPSTREAM.md`。
 
 ## 进度管理规则（强约束）

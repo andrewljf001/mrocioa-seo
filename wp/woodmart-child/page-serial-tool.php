@@ -52,6 +52,14 @@ $product_slides = array(
 if ( file_exists( $app_path ) ) {
 	$app_url = add_query_arg( 'ver', (string) filemtime( $app_path ), $app_url );
 }
+
+$collaboration_url = apply_filters(
+	'mrocioa_serial_collaboration_url',
+	defined( 'MROCIOA_SERIAL_COLLAB_URL' ) ? (string) MROCIOA_SERIAL_COLLAB_URL : home_url( '/serial-collab' )
+);
+if ( '' !== $collaboration_url ) {
+	$app_url = add_query_arg( 'collab', $collaboration_url, $app_url );
+}
 ?>
 <style id="mro-serial-tool-page-css">
 	body.page-template-page-serial-tool {
