@@ -22,8 +22,8 @@ mrocioa-seo/
 │   └── google-ads-first-campaign.md  # 首个 Google 广告执行方案
 ├── wp/                         # VPS 同步的可公开部署源码
 │   ├── woodmart-child/         # 活动子主题与串口工具
+│   ├── SERIAL-TOOL-UPSTREAM.md # 串口工具独立私有上游说明
 │   └── VPS-SOURCE-SHA256.txt   # 生产文件校验清单
-├── serial-tool-source/         # Web Serial Debugger Release 1.0 源码与发行记录
 ├── scripts/                    # 同步、审计与索引提交脚本
 └── reports/
     └── 2026-05.md             # 月度数据报告
@@ -46,8 +46,7 @@ mrocioa-seo/
 - 📈 [2026-05.md](reports/2026-05.md) — 月度报告
 - 🚀 [google-ads-first-campaign.md](marketing/google-ads-first-campaign.md) — 首个 Google 广告执行方案
 - 🧩 [WordPress deployment source](wp/README.md) — 与 VPS 对齐的活动源码
-- 🔌 [Web Serial Debugger Release 1.0](serial-tool-source/README.md) — 正式源码与功能说明
-- 📦 [Web Serial Debugger 发行规范](serial-tool-source/RELEASE-POLICY.md) — 版本号、测试、发行、同步与回退规则
+- 🔌 [Web Serial Debugger 上游说明](wp/SERIAL-TOOL-UPSTREAM.md) — 独立私有产品仓库、正式版本与部署边界
 - 🔄 [2026-07-18 三地同步记录](reports/vps-local-github-sync-2026-07-18.md) — VPS、本地与 GitHub 同步边界
 
 ## AI 分工

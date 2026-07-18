@@ -14,3 +14,7 @@ private credentials are intentionally excluded.
 
 See `VPS-SOURCE-SHA256.txt` for the production checksums captured during the
 2026-07-18 synchronization.
+
+The Web Serial Debugger files in `woodmart-child/` are release deployment
+copies. Product development, tests and release governance belong to the
+private upstream repository documented in `SERIAL-TOOL-UPSTREAM.md`.

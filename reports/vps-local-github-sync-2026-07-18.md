@@ -1,5 +1,11 @@
 # VPS, local mirror and GitHub synchronization — 2026-07-18
 
+> Historical synchronization record. Since 2026-07-18, Web Serial Debugger
+> product source, tests and release governance live in the private repository
+> `andrewljf001/mrocioa-serial-tool`. This public website repository retains
+> only the released WordPress adapter, packed application, deployment checksum
+> and website launch records. See `wp/SERIAL-TOOL-UPSTREAM.md`.
+
 ## Authority and scope
 
 - Authoritative source: `rogersense-vps:/var/www/mrocioa`
@@ -23,7 +29,7 @@ parent theme/plugins, uploads, caches or server backups.
 
 ## GitHub source snapshot
 
-The repository now includes:
+At the time of this synchronization, the repository included:
 
 - Current `woodmart-child` PHP/CSS templates and WooCommerce overrides.
 - The production Web Serial application asset.
