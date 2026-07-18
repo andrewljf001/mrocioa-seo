@@ -1,0 +1,14 @@
+.DS_Store
+.env
+.env.*
+*.log
+*.sql
+*.sql.gz
+*.bak
+*.bak-*
+*.save
+wp-config.php
+wp-config.production.php
+database/
+private/
+secrets/

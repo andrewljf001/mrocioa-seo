@@ -1,0 +1,290 @@
+/*
+ Theme Name:   Woodmart Child
+ Description:  Woodmart Child Theme
+ Author:       XTemos
+ Author URI:   http://xtemos.com
+ Template:     woodmart
+ Version:      1.0.0
+ Text Domain:  woodmart
+*/
+
+/* === MRO HERO REDESIGN v1 (AV Switches) === */ body.term-av-switches #mro-cat-hero{background:radial-gradient(640px 340px at 86% 6%,rgba(123,108,246,.34),rgba(55,213,242,.06) 42%,transparent 72%),#0A0A0F !important;padding:46px 40px 26px !important;overflow:hidden} body.term-av-switches #mro-cat-hero h1{font-size:52px !important;line-height:1.05 !important;margin-bottom:14px !important} body.term-av-switches #mro-cat-hero .mro-sub{font-size:16px !important;color:#A4A4B2 !important;max-width:560px !important;margin-bottom:24px !important} body.term-av-switches #mro-cat-hero .mro-tags{gap:8px !important;margin-bottom:0 !important} body.term-av-switches #mro-cat-hero .mro-tag,body.term-av-switches #mro-cat-hero .mro-tag.hi{color:#C9C4F5 !important;background:rgba(123,108,246,.10) !important;border:1px solid rgba(123,108,246,.40) !important;font-size:11px !important} body.term-av-switches #mro-cat-hero .mro-filters{display:none !important} body.term-av-switches #mro-cat-ticker{background:#0A0A0F !important;border-top:1px solid rgba(255,255,255,.08) !important;margin:0 !important;padding:0 40px !important} body.term-av-switches #mro-cat-ticker .mti{padding:16px 0 !important;border-right:1px solid rgba(255,255,255,.07) !important} body.term-av-switches #mro-cat-ticker .mti:last-child{border-right:none !important} body.term-av-switches #mro-cat-ticker .mtb{color:#fff !important;font-size:15px !important} body.term-av-switches #mro-cat-ticker .mtm{color:#6A6A78 !important;font-size:11px !important} body.term-av-switches #mro-cat-toolbar{padding:16px 40px !important}
+
+
+/* Fix product gallery flash on load */
+.woocommerce-product-gallery:not(.woocommerce-product-gallery--product-images-loaded) .woocommerce-product-gallery__image img {
+    visibility: hidden;
+}
+
+/* Fix Elementor lazy load - force first 3 sections to show background images */
+@media screen and (max-height: 1024px) {
+    .e-con.e-parent:nth-of-type(1):not(.e-lazyloaded):not(.e-no-lazyload) *,
+    .e-con.e-parent:nth-of-type(2):not(.e-lazyloaded):not(.e-no-lazyload) * {
+        background-image: unset !important;
+    }
+}
+@media screen and (max-height: 640px) {
+    .e-con.e-parent:nth-of-type(1):not(.e-lazyloaded):not(.e-no-lazyload) * {
+        background-image: unset !important;
+    }
+}
+
+/* MROCIOA UX polish: keep product copy and consent controls readable on small screens. */
+@media (max-width: 767px) {
+    .woocommerce-product-details__short-description,
+    .woocommerce-product-details__short-description ul,
+    .woocommerce-product-details__short-description li,
+    .summary-inner .price,
+    .summary-inner .wd-product-brands,
+    body .wd-product-tabs .wc-tab,
+    body .woocommerce-Tabs-panel {
+        font-size: 14px !important;
+        line-height: 1.55 !important;
+    }
+
+    .woocommerce-product-details__short-description li {
+        margin-bottom: 7px !important;
+    }
+
+    .mro-hero h1,
+    body.term-av-switches #mro-cat-hero h1 {
+        overflow-wrap: anywhere;
+        word-break: normal;
+    }
+}
+
+.cky-consent-container .cky-consent-bar {
+    max-width: min(100vw - 24px, 980px) !important;
+}
+
+.cky-consent-container .cky-notice-des,
+.cky-consent-container .cky-notice-des p {
+    line-height: 1.5 !important;
+}
+
+@media (min-width: 768px) {
+    .cky-consent-container.cky-box-bottom-left,
+    .cky-consent-container.cky-box-bottom-right {
+        max-width: 520px !important;
+    }
+
+    .cky-consent-container .cky-consent-bar {
+        padding: 18px 22px !important;
+    }
+}
+
+@media (max-width: 576px) {
+    .cky-consent-container {
+        width: 100% !important;
+        max-width: 100% !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        padding: 0 10px 10px !important;
+    }
+
+    .cky-consent-container .cky-consent-bar {
+        border-radius: 12px !important;
+        padding: 12px 14px !important;
+    }
+
+    .cky-consent-container .cky-title {
+        font-size: 16px !important;
+        line-height: 1.3 !important;
+        margin-bottom: 5px !important;
+    }
+
+    .cky-consent-container .cky-notice-des {
+        max-height: 26vh !important;
+        overflow: auto !important;
+        font-size: 12.5px !important;
+    }
+
+    .cky-consent-container .cky-notice-btn-wrapper {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 8px !important;
+        margin-top: 10px !important;
+    }
+
+    .cky-consent-container .cky-btn {
+        width: 100% !important;
+        min-height: 38px !important;
+        margin: 0 !important;
+        padding: 8px 10px !important;
+        border-radius: 8px !important;
+        font-size: 13px !important;
+        line-height: 1.25 !important;
+        white-space: normal !important;
+    }
+
+    .cky-consent-container .cky-btn-accept {
+        grid-column: 1 / -1;
+    }
+}
+
+/* MROCIOA audit fixes: prevent mobile content from widening the viewport. */
+@media (max-width: 767px) {
+    html,
+    body {
+        max-width: 100%;
+        overflow-x: hidden;
+    }
+
+    .single-post .entry-content,
+    .single-post .wd-entry-content,
+    .mro-w,
+    .mro-pol {
+        max-width: 100%;
+        overflow-wrap: anywhere;
+        word-break: break-word;
+    }
+
+    .single-post .entry-content table,
+    .single-post .wd-entry-content table,
+    .mro-tbl {
+        display: block;
+        width: 100% !important;
+        max-width: 100% !important;
+        border-collapse: separate !important;
+        border-spacing: 0 !important;
+        overflow: visible !important;
+        white-space: normal !important;
+    }
+
+    .single-post .entry-content thead,
+    .single-post .wd-entry-content thead,
+    .mro-tbl thead {
+        display: none !important;
+    }
+
+    .single-post .entry-content tbody,
+    .single-post .entry-content tr,
+    .single-post .entry-content td,
+    .single-post .wd-entry-content tbody,
+    .single-post .wd-entry-content tr,
+    .single-post .wd-entry-content td,
+    .mro-tbl tbody,
+    .mro-tbl tr,
+    .mro-tbl td {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100% !important;
+        white-space: normal !important;
+    }
+
+    .single-post .entry-content tr,
+    .single-post .wd-entry-content tr,
+    .mro-tbl tr {
+        margin: 0 0 12px !important;
+        border: 1px solid #E4E8F0 !important;
+        border-radius: 10px !important;
+        overflow: hidden !important;
+        background: #fff !important;
+    }
+
+    .single-post .entry-content td,
+    .single-post .wd-entry-content td,
+    .mro-tbl td {
+        display: grid !important;
+        grid-template-columns: minmax(96px, 36%) minmax(0, 1fr) !important;
+        gap: 12px !important;
+        align-items: start !important;
+        padding: 11px 12px !important;
+        border: 0 !important;
+        border-bottom: 1px solid #EEF1F6 !important;
+    }
+
+    .single-post .entry-content td:last-child,
+    .single-post .wd-entry-content td:last-child,
+    .mro-tbl td:last-child {
+        border-bottom: 0 !important;
+    }
+
+    .single-post .entry-content td::before,
+    .single-post .wd-entry-content td::before,
+    .mro-tbl td::before {
+        content: attr(data-label);
+        font-weight: 700;
+        color: #0B0E14;
+        overflow-wrap: anywhere;
+    }
+
+    body.woocommerce-shop .wd-carousel,
+    body.woocommerce-shop .wd-carousel-wrap,
+    body.woocommerce-shop .wd-carousel-container,
+    body.woocommerce-shop .wd-products,
+    body.page-id-9763 .wd-slider,
+    body.page-id-9763 .wd-carousel,
+    body.page-id-9763 .wd-carousel-wrap,
+    body.page-id-9763 .wd-carousel-container {
+        max-width: 100vw !important;
+        overflow: hidden !important;
+    }
+
+    body.page-id-9763 [id^="slide-"],
+    body.woocommerce-shop .wd-carousel-item {
+        max-width: 100vw !important;
+    }
+
+    .wd-carousel-item:not(.wd-slide-visible):not(.wd-full-visible):not(.wd-active) {
+        visibility: hidden !important;
+    }
+
+    .wd-side-hidden:not(.wd-opened) {
+        visibility: hidden !important;
+    }
+
+    .wd-side-hidden.wd-opened {
+        visibility: visible !important;
+    }
+
+    body .scrollToTop {
+        display: none !important;
+    }
+
+    body .wd-btn-arrow {
+        display: none !important;
+    }
+
+    #mro-gallery .mro-thumb-nav {
+        overflow: visible !important;
+    }
+
+    #mro-thumbs {
+        display: grid !important;
+        grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+        gap: 8px !important;
+        overflow: visible !important;
+        min-width: 0 !important;
+    }
+
+    #mro-gallery .mro-gt {
+        width: 100% !important;
+        min-width: 0 !important;
+        height: auto !important;
+        aspect-ratio: 1 !important;
+    }
+
+    #mro-gallery .mro-tarrow {
+        display: none !important;
+    }
+
+    body.single-product,
+    body.single-product .website-wrapper,
+    body.single-product .main-page-wrapper,
+    body.single-product .wd-page-content {
+        max-width: 100vw !important;
+        overflow-x: clip !important;
+    }
+
+    .cky-consent-container .cky-consent-bar {
+        max-height: 44svh !important;
+        overflow: auto !important;
+    }
+
+    .cky-consent-container .cky-notice-des {
+        max-height: 18svh !important;
+    }
+}
