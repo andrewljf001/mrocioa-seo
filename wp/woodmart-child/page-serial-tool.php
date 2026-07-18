@@ -269,10 +269,13 @@ if ( file_exists( $app_path ) ) {
 		color: #ffc241;
 	}
 	.mro-serial-fullscreen {
+		appearance: none;
 		padding: 8px 15px;
 		border: 1px solid rgba(55, 213, 242, 0.72);
 		background: rgba(55, 213, 242, 0.12);
 		color: #ffffff !important;
+		cursor: pointer;
+		font-family: inherit;
 		text-decoration: none !important;
 		transition: background 0.18s ease, border-color 0.18s ease;
 	}
@@ -293,10 +296,29 @@ if ( file_exists( $app_path ) ) {
 		text-align: center;
 	}
 	.mro-serial-stage {
+		position: relative;
 		width: 100%;
 		overflow: auto;
 		background: #060a0e;
 		-webkit-overflow-scrolling: touch;
+	}
+	body.mro-serial-focus-mode {
+		overflow: hidden !important;
+	}
+	.mro-serial-stage:fullscreen,
+	.mro-serial-stage:-webkit-full-screen,
+	.mro-serial-stage.is-focus-mode {
+		width: 100vw;
+		height: 100vh;
+		height: 100dvh;
+		max-width: none;
+		overflow: hidden;
+		background: #060a0e;
+	}
+	.mro-serial-stage.is-focus-mode {
+		position: fixed;
+		z-index: 2147483000;
+		inset: 0;
 	}
 	.mro-serial-frame {
 		display: block;
@@ -304,6 +326,51 @@ if ( file_exists( $app_path ) ) {
 		height: 720px;
 		border: 0;
 		background: #060a0e;
+	}
+	.mro-serial-stage:fullscreen .mro-serial-frame,
+	.mro-serial-stage:-webkit-full-screen .mro-serial-frame,
+	.mro-serial-stage.is-focus-mode .mro-serial-frame {
+		width: 100% !important;
+		min-width: 0 !important;
+		height: 100% !important;
+	}
+	.mro-serial-exit-fullscreen {
+		position: absolute;
+		z-index: 3;
+		top: 8px;
+		left: 50%;
+		display: none;
+		min-height: 30px;
+		align-items: center;
+		justify-content: center;
+		padding: 6px 12px;
+		border: 1px solid rgba(55, 213, 242, 0.58);
+		border-radius: 4px;
+		background: rgba(6, 10, 14, 0.84);
+		box-shadow: 0 8px 24px rgba(0, 0, 0, 0.36);
+		color: #ffffff;
+		cursor: pointer;
+		font: 700 11px/1.2 Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+		letter-spacing: 0.035em;
+		opacity: 0.78;
+		transform: translateX(-50%);
+		transition: opacity 0.18s ease, border-color 0.18s ease, background 0.18s ease;
+	}
+	.mro-serial-stage:fullscreen .mro-serial-exit-fullscreen,
+	.mro-serial-stage:-webkit-full-screen .mro-serial-exit-fullscreen,
+	.mro-serial-stage.is-focus-mode .mro-serial-exit-fullscreen {
+		display: inline-flex;
+	}
+	.mro-serial-exit-fullscreen:hover,
+	.mro-serial-exit-fullscreen:focus-visible {
+		border-color: #37d5f2;
+		background: rgba(6, 10, 14, 0.96);
+		opacity: 1;
+	}
+	.mro-serial-exit-fullscreen span {
+		margin-left: 5px;
+		color: #cbdde4;
+		font-weight: 600;
 	}
 	.mro-serial-noscript {
 		margin: 0;
@@ -448,7 +515,7 @@ if ( file_exists( $app_path ) ) {
 			</div>
 			<div class="mro-serial-actions">
 				<span class="mro-serial-support" id="mro-serial-support">Checking Web Serial&hellip;</span>
-				<a class="mro-serial-fullscreen" href="<?php echo esc_url( $app_url ); ?>" target="_blank" rel="noopener" hidden>Open full screen&nbsp; &#8599;</a>
+				<button class="mro-serial-fullscreen" type="button" aria-controls="mro-serial-stage" aria-pressed="false" hidden>Enter full screen&nbsp; &#x26F6;</button>
 			</div>
 		</div>
 	</section>
@@ -468,6 +535,7 @@ if ( file_exists( $app_path ) ) {
 	</section>
 
 	<section class="mro-serial-stage" id="mro-serial-stage" aria-label="MROCIOA Web Serial application" hidden>
+		<button class="mro-serial-exit-fullscreen" id="mro-serial-exit-fullscreen" type="button" aria-label="Exit full screen" hidden>Exit full screen <span aria-hidden="true">&middot; Esc</span></button>
 		<iframe
 			class="mro-serial-frame"
 			id="mro-serial-frame"
@@ -491,6 +559,7 @@ if ( file_exists( $app_path ) ) {
 	var stage = document.getElementById('mro-serial-stage');
 	var browserGate = document.getElementById('mro-serial-browser-gate');
 	var fullScreen = document.querySelector('.mro-serial-fullscreen');
+	var exitFullScreen = document.getElementById('mro-serial-exit-fullscreen');
 	var productRotator = document.getElementById('mro-serial-products');
 	var ua = navigator.userAgent || '';
 	var brands = navigator.userAgentData && navigator.userAgentData.brands
@@ -541,7 +610,97 @@ if ( file_exists( $app_path ) ) {
 		} catch (error) {}
 	}
 
-	if (frame) frame.addEventListener('load', applySiteThemeToTool);
+	function getFullscreenElement() {
+		return document.fullscreenElement || document.webkitFullscreenElement || null;
+	}
+
+	function isStageFullscreen() {
+		return getFullscreenElement() === stage;
+	}
+
+	function isFocusMode() {
+		return !!(stage && stage.classList.contains('is-focus-mode'));
+	}
+
+	function updateFullscreenState() {
+		var active = isStageFullscreen() || isFocusMode();
+		if (exitFullScreen) exitFullScreen.hidden = !active;
+		if (fullScreen) fullScreen.setAttribute('aria-pressed', active ? 'true' : 'false');
+		if (frame && active) frame.style.height = '100%';
+		if (frame && !active) {
+			frame.style.height = '';
+			window.requestAnimationFrame(sizeFrame);
+		}
+	}
+
+	function enterFocusMode() {
+		if (!stage) return;
+		stage.classList.add('is-focus-mode');
+		document.body.classList.add('mro-serial-focus-mode');
+		if (exitFullScreen) {
+			exitFullScreen.setAttribute('aria-label', 'Exit focus mode');
+			exitFullScreen.innerHTML = 'Exit focus mode <span aria-hidden="true">&middot; Esc</span>';
+		}
+		updateFullscreenState();
+	}
+
+	function leaveFocusMode() {
+		if (!stage) return;
+		stage.classList.remove('is-focus-mode');
+		document.body.classList.remove('mro-serial-focus-mode');
+		if (exitFullScreen) {
+			exitFullScreen.setAttribute('aria-label', 'Exit full screen');
+			exitFullScreen.innerHTML = 'Exit full screen <span aria-hidden="true">&middot; Esc</span>';
+		}
+		updateFullscreenState();
+	}
+
+	function enterFullScreenMode() {
+		if (!stage || isStageFullscreen() || isFocusMode()) return;
+		var request = stage.requestFullscreen || stage.webkitRequestFullscreen;
+		if (!request) {
+			enterFocusMode();
+			return;
+		}
+		try {
+			var result = request.call(stage);
+			if (result && typeof result.catch === 'function') result.catch(enterFocusMode);
+		} catch (error) {
+			enterFocusMode();
+		}
+	}
+
+	function leaveFullScreenMode() {
+		if (isFocusMode()) {
+			leaveFocusMode();
+			return;
+		}
+		if (!isStageFullscreen()) return;
+		var exit = document.exitFullscreen || document.webkitExitFullscreen;
+		if (!exit) return;
+		try {
+			var result = exit.call(document);
+			if (result && typeof result.catch === 'function') result.catch(function () {});
+		} catch (error) {}
+	}
+
+	function handleFullscreenEscape(event) {
+		if (event.key === 'Escape' && isFocusMode()) leaveFocusMode();
+	}
+
+	if (frame) {
+		frame.addEventListener('load', function () {
+			applySiteThemeToTool();
+			try {
+				frame.contentDocument.addEventListener('keydown', handleFullscreenEscape);
+			} catch (error) {}
+		});
+	}
+	if (fullScreen) fullScreen.addEventListener('click', enterFullScreenMode);
+	if (exitFullScreen) exitFullScreen.addEventListener('click', leaveFullScreenMode);
+	document.addEventListener('fullscreenchange', updateFullscreenState);
+	document.addEventListener('webkitfullscreenchange', updateFullscreenState);
+	document.addEventListener('keydown', handleFullscreenEscape);
 
 	if (productRotator) {
 		var productSlides = Array.prototype.slice.call(productRotator.querySelectorAll('.mro-serial-product-slide'));
@@ -602,6 +761,10 @@ if ( file_exists( $app_path ) ) {
 
 	function sizeFrame() {
 		if (!frame) return;
+		if (isStageFullscreen() || isFocusMode()) {
+			frame.style.height = '100%';
+			return;
+		}
 		var compact = window.matchMedia('(max-width: 899px)').matches;
 		var minimum = compact ? 820 : 720;
 		var top = frame.getBoundingClientRect().top;
