@@ -462,6 +462,19 @@ function Session({cfg,setCfg,connected,setConnected,visible,ports,setPorts,reque
     </footer>
   </div>;
 }
+const LAYOUT_KEY='mrocioa.layout';
+const LAYOUT_DEFAULT_MARKER='mrocioa.layout-default-1+3-v1';
+function loadDefaultLayout(){
+  try{
+    if(localStorage.getItem(LAYOUT_DEFAULT_MARKER)!=='1'){
+      localStorage.setItem(LAYOUT_DEFAULT_MARKER,'1');
+      localStorage.setItem(LAYOUT_KEY,'4');
+      return '4';
+    }
+    const saved=localStorage.getItem(LAYOUT_KEY);
+    return ['1','2','4'].includes(saved)?saved:'4';
+  }catch(e){return '4';}
+}
 function MainScreen(){
   const [ports,setPorts]=React.useState([]);
   React.useEffect(()=>{
@@ -498,7 +511,7 @@ function MainScreen(){
   const [active,setActive]=React.useState(0);
   const [targetId,setTargetId]=React.useState(null);
   React.useEffect(()=>{setTargetId(null);},[active]);
-  const [layout,setLayout]=React.useState(()=>{try{return localStorage.getItem('mrocioa.layout')||'1';}catch(e){return '1';}});
+  const [layout,setLayout]=React.useState(loadDefaultLayout);
   const [sbW,setSbW]=React.useState(272);
   const sbDrag=e=>{
     const startX=e.clientX,w0=sbW;
@@ -507,7 +520,7 @@ function MainScreen(){
     window.addEventListener('mousemove',mm);window.addEventListener('mouseup',up);
     document.body.style.cursor='col-resize';e.preventDefault();
   };
-  React.useEffect(()=>{try{localStorage.setItem('mrocioa.layout',layout);}catch(e){}},[layout]);
+  React.useEffect(()=>{try{localStorage.setItem(LAYOUT_KEY,layout);}catch(e){}},[layout]);
   const [lang,setLang]=React.useState(()=>{try{return localStorage.getItem('mrocioa.lang')||'en';}catch(e){return 'en';}});
   const [prefs,setPrefs]=React.useState(()=>{const def={tsFmt:'abs',fontSz:12,enc:'utf8'};try{return {...def,...JSON.parse(localStorage.getItem('mrocioa.prefs')||'{}')};}catch(e){return def;}});
   React.useEffect(()=>{try{localStorage.setItem('mrocioa.lang',lang);localStorage.setItem('mrocioa.prefs',JSON.stringify(prefs));}catch(e){}},[lang,prefs]);
@@ -578,20 +591,19 @@ function MainScreen(){
           <div style={{borderTop:'1px solid var(--border-0)',paddingTop:8}}>
             <div onClick={()=>setVerOpen(o=>!o)} style={{display:'flex',justifyContent:'space-between',alignItems:'center',cursor:'pointer'}}>
               <span style={{fontSize:10,color:'var(--fg-2)'}}>{t('版本说明','CHANGELOG')}</span>
-              <span style={{fontSize:10,color:'var(--fg-3)'}}>Release 1.0 {verOpen?'▴':'▾'}</span>
+              <span style={{fontSize:10,color:'var(--fg-3)'}}>Release 1.0.1 {verOpen?'▴':'▾'}</span>
             </div>
             {verOpen&&<div style={{marginTop:6,display:'flex',flexDirection:'column',gap:4,maxHeight:180,overflowY:'auto',fontSize:9,color:'var(--fg-3)',fontFamily:'var(--font-mono)',lineHeight:1.5}}>
-              <div>{t('Release 1.0 · 正式发行','Release 1.0 · Stable release')}</div>
-              <div>{t('• 最多 4 个串口窗口，支持 MAIN / SUB 布局','• Up to 4 serial sessions with MAIN / SUB layouts')}</div>
-              <div>{t('• Web Serial 授权、自动发现、插拔检测与自动重连','• Web Serial permission, discovery, hot-plug detection and auto reconnect')}</div>
-              <div>{t('• ASCII / HEX 收发、文件发送、快捷发送与循环序列','• ASCII / HEX I/O, file transfer, quick send and looping sequences')}</div>
-              <div>{t('• 100,000 行监视缓冲、搜索、过滤、记录与导出','• 100,000-line monitor buffer, search, filter, recording and export')}</div>
-              <div>{t('• 实时多通道图表、CSV / PNG 导出与游标测量','• Live multi-channel charts, CSV / PNG export and cursor measurement')}</div>
-              <div>{t('• AT、NMEA、JSON、Modbus RTU 与 EDID 协议解析','• AT, NMEA, JSON, Modbus RTU and EDID protocol decoding')}</div>
-              <div>{t('• 数据仅在本机浏览器处理，不上传服务器','• Data is processed locally in the browser and is never uploaded')}</div>
+              <div>{t('Release 1.0.1 · 正式发行','Release 1.0.1 · Stable release')}</div>
+              <div>{t('• 真正全屏：隐藏站点与浏览器导航界面，支持 Esc 退出','• True fullscreen hides site and browser navigation UI, with Esc to exit')}</div>
+              <div>{t('• 新增 IR、CEC、I²C、SPI、UART、CAN、LIN 等串口调试日志解析','• Added serial debug-log decoding for IR, CEC, I²C, SPI, UART, CAN, LIN and more')}</div>
+              <div>{t('• 首次打开默认采用 1+3 四窗布局，手动选择仍会保存','• New users see the 1+3 four-pane layout by default; manual choices remain saved')}</div>
+              <div>{t('• Chrome/Edge 桌面兼容性与本机数据处理保持不变','• Desktop Chrome/Edge compatibility and local-only data processing are unchanged')}</div>
+              <div>{t('Release 1.0.0 · 首次正式发行','Release 1.0.0 · Initial stable release')}</div>
+              <div>{t('• Web Serial、多会话、收发、监视、导出、图表与基础协议解析','• Web Serial, multi-session I/O, monitoring, export, charts and core protocol decoding')}</div>
             </div>}
           </div>
-          <div style={{fontSize:9,color:'var(--fg-3)',borderTop:'1px solid var(--border-0)',paddingTop:8}}>mrocioa web serial debugger · Release 1.0 · {t('快捷键','hotkeys')}: Ctrl+L {t('清空','clean')} · Ctrl+F {t('搜索','search')}</div>
+          <div style={{fontSize:9,color:'var(--fg-3)',borderTop:'1px solid var(--border-0)',paddingTop:8}}>mrocioa web serial debugger · Release 1.0.1 · {t('快捷键','hotkeys')}: Ctrl+L {t('清空','clean')} · Ctrl+F {t('搜索','search')}</div>
         </div>}
       </div>
     </header>

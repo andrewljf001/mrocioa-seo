@@ -663,7 +663,7 @@ if ( file_exists( $app_path ) ) {
 			return;
 		}
 		try {
-			var result = request.call(stage);
+			var result = request.call(stage, { navigationUI: 'hide' });
 			if (result && typeof result.catch === 'function') result.catch(enterFocusMode);
 		} catch (error) {
 			enterFocusMode();

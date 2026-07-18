@@ -7,6 +7,7 @@ assert.ok(script, 'serial page script must exist');
 assert.doesNotThrow(() => new Function(script), 'embedded page script must compile');
 
 assert.match(template, /stage\.requestFullscreen \|\| stage\.webkitRequestFullscreen/);
+assert.match(template, /request\.call\(stage, \{ navigationUI: 'hide' \}\)/);
 assert.match(template, /result\.catch\(enterFocusMode\)/);
 assert.match(template, /stage\.classList\.add\('is-focus-mode'\)/);
 assert.match(template, /frame\.contentDocument\.addEventListener\('keydown', handleFullscreenEscape\)/);
