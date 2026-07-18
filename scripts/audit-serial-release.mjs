@@ -7,7 +7,8 @@ const version = fs.readFileSync(new URL('serial-tool-source/VERSION', root), 'ut
 const changelog = fs.readFileSync(new URL('serial-tool-source/CHANGELOG.md', root), 'utf8');
 const mainSource = fs.readFileSync(new URL('serial-tool-source/MainScreen.jsx', root), 'utf8');
 const protocolSource = fs.readFileSync(new URL('serial-tool-source/ProtocolPanel.jsx', root), 'utf8');
-const asset = fs.readFileSync(new URL('wp/woodmart-child/assets/serial-tool/mrocioa-serial-tool.html', root), 'utf8');
+const assetInput = process.argv[2] || new URL('wp/woodmart-child/assets/serial-tool/mrocioa-serial-tool.html', root);
+const asset = fs.readFileSync(assetInput, 'utf8');
 const page = fs.readFileSync(new URL('wp/woodmart-child/page-serial-tool.php', root), 'utf8');
 
 assert.equal(version, '1.0.1');

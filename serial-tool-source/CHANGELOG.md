@@ -35,7 +35,12 @@
 - Packed-source consistency checks: passed.
 - Serial-page template and fullscreen fallback checks: passed.
 - Native fullscreen on macOS desktop Chrome: manually accepted on 2026-07-18.
-- Release package SHA-256, VPS rollback path, production checks, Git commit and tag are recorded after deployment.
+- Production HTTP, SEO metadata, canonical URL, WebApplication structured data and sitemap checks: passed.
+- Release application SHA-256: `87c5de0cedd734cd3b5ccda05f212350e0512db36fe9ac5b0f18de6d3b9ba611`.
+- WordPress page-template SHA-256: `81115f8d6b3520ba3af155ba4d479b88ffd10f57825d3583dc1d3e8b6ea0293d`.
+- VPS rollback directory: `/var/www/mrocioa/wp-content/codex-backups/serial-tool-before-1.0.1-20260718-133134/`.
+- Release implementation commit: `bc206bb`; release tag: `serial-tool-v1.0.1`.
+- No physical serial device was attached to the release environment; the owner accepted the verified candidate and explicitly authorized production deployment.
 
 ## 1.0.0 — 2026-07-18
 
