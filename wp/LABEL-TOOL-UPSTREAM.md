@@ -4,9 +4,9 @@
 
 - 独立产品目录：`../mrocioa-label-tool/`（相对于工作区根目录）
 - 私有 GitHub 仓库：`https://github.com/andrewljf001/mrocioa-label-tool`
-- 当前正式产品版本：`1.0.40`
-- 当前网站部署来源提交：`6629bdb4f7c2d01832589d5631f38caf9ec244bb`
-- 当前网站部署来源标签：`label-tool-v1.0.40`
+- 当前正式产品版本：`1.0.41`
+- 当前网站部署来源提交：`e8e82d2dbe15355490e17c5b0414e863685d5600`
+- 当前网站部署来源标签：`label-tool-v1.0.41`
 - 线上页面：`https://mrocioa.com/label-printing-tool/`
 
 ## 本网站仓库保留的部署文件

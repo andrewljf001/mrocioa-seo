@@ -327,6 +327,71 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     }
 
+    // Keep the visible label name, saved-file name, imported JSON name and
+    // current draft session consistent. The original bundle serialized JSON
+    // before the user chose a new file name, then trusted the stale embedded
+    // name on import.
+    const templateNameConsistencyPatches = [
+      [
+        "      expTpl: async () => {\n        const withOv = this.hasOverlay() ? confirm(this.tr('此标签含叠底对照原图。\\n\\n确定 = 一并导出（文件变大）\\n取消 = 不导出叠底（推荐）')) : false;\n        const data = JSON.stringify(this.serializeTpl(withOv), null, 2);",
+        [
+          "      expTpl: async () => {",
+          "        const withOv = this.hasOverlay() ? confirm(this.tr('此标签含叠底对照原图。\\n\\n确定 = 一并导出（文件变大）\\n取消 = 不导出叠底（推荐）')) : false;",
+          "        const exportTpl = this.serializeTpl(withOv);",
+          "        const nameFromFile = (filename) => String(filename || '').replace(/\\.label\\.json$/i, '').replace(/\\.json$/i, '').trim();"
+        ].join('\n')
+      ],
+      [
+        "            this.rememberDir(fh);\n            const w = await fh.createWritable(); await w.write(data); await w.close();",
+        [
+          "            this.rememberDir(fh);",
+          "            const finalName = nameFromFile(fh.name) || exportTpl.name;",
+          "            const data = JSON.stringify({ ...exportTpl, name: finalName }, null, 2);",
+          "            this.setState({ lblName: finalName }, () => this.saveSession());",
+          "            const w = await fh.createWritable(); await w.write(data); await w.close();"
+        ].join('\n')
+      ],
+      [
+        "        const nm = prompt(this.tr('文件名：'), s.lblName) || s.lblName;\n        const blob = new Blob([data], { type: 'application/json' });",
+        [
+          "        const nm = prompt(this.tr('文件名：'), s.lblName) || s.lblName;",
+          "        const finalName = nameFromFile(nm) || exportTpl.name;",
+          "        const data = JSON.stringify({ ...exportTpl, name: finalName }, null, 2);",
+          "        this.setState({ lblName: finalName }, () => this.saveSession());",
+          "        const blob = new Blob([data], { type: 'application/json' });"
+        ].join('\n')
+      ],
+      [
+        "          const tp = JSON.parse(await f.text());\n          if (!tp.els || !tp.w) throw new Error('bad format');\n          this.loadTpl(tp);",
+        [
+          "          const tp = JSON.parse(await f.text());",
+          "          if (!tp.els || !tp.w) throw new Error('bad format');",
+          "          const importedName = String(f.name || '').replace(/\\.label\\.json$/i, '').replace(/\\.json$/i, '').trim();",
+          "          if (importedName) tp.name = importedName;",
+          "          this.loadTpl(tp);"
+        ].join('\n')
+      ],
+      [
+        "          if (s.lblName === t.name) this.setState({ lblName: nn });",
+        "          if (s.lblName === t.name) this.setState({ lblName: nn }, () => this.saveSession());"
+      ],
+      [
+        "        this.setState({ lblSaved: true, lblName: name });",
+        "        this.setState({ lblSaved: true, lblName: name }, () => this.saveSession());"
+      ],
+      [
+        "      this.setState({ lblName: name });",
+        "      this.setState({ lblName: name }, () => this.saveSession());"
+      ]
+    ];
+    for (const [sourceCode, consistentCode] of templateNameConsistencyPatches) {
+      if (template.includes(sourceCode)) {
+        template = template.replace(sourceCode, consistentCode);
+      } else {
+        console.warn('Template name consistency target was not found.');
+      }
+    }
+
     // Nested page bundles (iframe targets). Each ships ONCE, in the ROOT
     // document's manifest; frame srcs carry an about:blank#<uuid> marker
     // instead of a substitutable uuid. Every document mints the blobs for
