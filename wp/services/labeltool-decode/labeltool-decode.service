@@ -1,0 +1,37 @@
+[Unit]
+Description=标签工具 · PDF解析/条码解码服务 (labeltool decode)
+Documentation=https://mrocioa.com
+After=network.target
+# Never stop retrying after a rapid crash loop. The service remains private
+# on 127.0.0.1 and WordPress performs the authenticated public proxying.
+StartLimitIntervalSec=0
+
+[Service]
+Type=simple
+User=labeltool
+Group=labeltool
+WorkingDirectory=/opt/labeltool
+Environment=LABELTOOL_HOST=127.0.0.1
+Environment=LABELTOOL_PORT=8632
+# 同源反代，不需要跨域；留空即不下发 CORS 头
+Environment=LABELTOOL_ORIGINS=
+ExecStart=/opt/labeltool/venv/bin/python /opt/labeltool/pdf_svg_server.py
+Restart=always
+RestartSec=3
+
+# 只监听回环，不需要任何对外权限
+PrivateTmp=true
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/opt/labeltool
+# PyMuPDF 解析不可信 PDF —— 收紧内核暴露面
+ProtectKernelTunables=true
+ProtectKernelModules=true
+ProtectControlGroups=true
+RestrictAddressFamilies=AF_INET AF_UNIX
+MemoryMax=1G
+CPUQuota=200%
+
+[Install]
+WantedBy=multi-user.target

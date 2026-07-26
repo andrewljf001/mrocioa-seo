@@ -21,8 +21,11 @@ mrocioa-seo/
 ├── marketing/
 │   └── google-ads-first-campaign.md  # 首个 Google 广告执行方案
 ├── wp/                         # VPS 同步的可公开部署源码
-│   ├── woodmart-child/         # 活动子主题与串口工具
+│   ├── woodmart-child/         # 活动子主题、串口与标签页面适配器
+│   ├── plugins/labeltool/      # 标签工具 WordPress 正式部署副本
+│   ├── services/labeltool-decode/ # 标签工具 VPS 解码服务部署副本
 │   ├── SERIAL-TOOL-UPSTREAM.md # 串口工具独立私有上游说明
+│   ├── LABEL-TOOL-UPSTREAM.md  # 标签工具独立私有上游说明
 │   └── VPS-SOURCE-SHA256.txt   # 生产文件校验清单
 ├── scripts/                    # 同步、审计与索引提交脚本
 └── reports/
@@ -47,6 +50,7 @@ mrocioa-seo/
 - 🚀 [google-ads-first-campaign.md](marketing/google-ads-first-campaign.md) — 首个 Google 广告执行方案
 - 🧩 [WordPress deployment source](wp/README.md) — 与 VPS 对齐的活动源码
 - 🔌 [Web Serial Debugger 上游说明](wp/SERIAL-TOOL-UPSTREAM.md) — 独立私有产品仓库、正式版本与部署边界
+- 🏷️ [Label Design & Printing Tool 上游说明](wp/LABEL-TOOL-UPSTREAM.md) — 独立私有产品仓库、三服务架构与部署边界
 - 🔄 [2026-07-18 三地同步记录](reports/vps-local-github-sync-2026-07-18.md) — VPS、本地与 GitHub 同步边界
 
 ## AI 分工
@@ -58,4 +62,4 @@ mrocioa-seo/
 | Claude Code | 技术 SEO 脚本、数据处理 |
 
 ---
-最后更新：2026-07-18
+最后更新：2026-07-26

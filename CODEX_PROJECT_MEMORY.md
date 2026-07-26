@@ -19,6 +19,17 @@
 - 远程协同界面遵循 Host-authoritative Viewer：远端完整同步测试主机的布局、图表、色彩和状态；无权限控件只以灰色禁用显示。
 - 详细入口：`wp/SERIAL-TOOL-UPSTREAM.md`。
 
+## 标签工具项目边界（2026-07-26）
+
+- Label Design & Printing Tool 已拆分到独立产品目录：`/Users/lijianfeng/Documents/mrocioa网页优化/mrocioa-label-tool`。
+- 私有仓库：`https://github.com/andrewljf001/mrocioa-label-tool`。
+- 当前正式版本：`1.0.13`；网站部署来源提交 `a8cfcc8`，发行标签 `label-tool-v1.0.13`。
+- 标签编辑、条码/二维码和模板在浏览器运行；PDF 解码走 VPS loopback 8632；USB 打印走工位 loopback 8631。
+- 标签功能、设计、测试、版本和三服务维护只在独立产品仓库开发。
+- 本 `mrocioa-seo` 仓库只保留正式 WordPress/VPS 部署副本、来源说明和 SHA-256 记录。
+- 不直接修改网站仓库或 VPS 中的标签部署副本；先在产品仓库完成、测试、验收和发行，再同步部署文件。
+- 详细入口：`wp/LABEL-TOOL-UPSTREAM.md`。
+
 ## 进度管理规则（强约束）
 
 - 进度唯一入口：`progress/PROGRESS.md`
