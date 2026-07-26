@@ -41,12 +41,19 @@ if ( '' === $label_access_note && ! $public_access && ! is_user_logged_in() ) {
 } elseif ( '' === $label_access_note ) {
 	$label_access = true;
 	$decode_url   = rest_url( 'labeltool/v1/svc/' . labeltool_token() );
+	$app_args     = array(
+		'svc'         => $decode_url,
+		'tpl_api'     => rest_url( 'labeltool/v1/templates' ),
+		'tpl_session' => admin_url( 'admin-ajax.php?action=labeltool_template_session' ),
+		'tpl_share'   => $label_canonical,
+		'v'           => LABELTOOL_VER,
+		'ver'         => (string) filemtime( $app_path ),
+	);
+	if ( isset( $_GET['template'] ) && ctype_digit( (string) $_GET['template'] ) ) {
+		$app_args['template'] = (string) absint( $_GET['template'] );
+	}
 	$app_url      = add_query_arg(
-		array(
-			'svc' => $decode_url,
-			'v'   => LABELTOOL_VER,
-			'ver' => (string) filemtime( $app_path ),
-		),
+		$app_args,
 		$app_url
 	);
 }
@@ -602,7 +609,7 @@ $product_slides = array(
 				id="mro-serial-frame"
 				src="<?php echo esc_url( $app_url ); ?>"
 				title="MROCIOA Label Design and Printing Tool"
-				allow="serial; usb; fullscreen"
+				allow="serial; usb; fullscreen; clipboard-write"
 				allowfullscreen
 				loading="eager"
 				referrerpolicy="same-origin"
