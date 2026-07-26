@@ -23,7 +23,7 @@
 
 - Label Design & Printing Tool 已拆分到独立产品目录：`/Users/lijianfeng/Documents/mrocioa网页优化/mrocioa-label-tool`。
 - 私有仓库：`https://github.com/andrewljf001/mrocioa-label-tool`。
-- 当前正式版本：`1.0.39`；网站部署来源提交 `87cdd42`，发行标签 `label-tool-v1.0.39`。
+- 当前正式版本：`1.0.40`；网站部署来源提交 `6629bdb`，发行标签 `label-tool-v1.0.40`。
 - 标签编辑、条码/二维码和本机模板在浏览器运行；官方在线模板由 WordPress 保存；PDF 解码走 VPS loopback 8632；USB 打印走工位 loopback 8631。
 - 标签功能、设计、测试、版本和三服务维护只在独立产品仓库开发。
 - 本 `mrocioa-seo` 仓库只保留正式 WordPress/VPS 部署副本、来源说明和 SHA-256 记录。

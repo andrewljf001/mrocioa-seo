@@ -2,14 +2,14 @@
 /**
  * Plugin Name: 标签打印工具 Label Tool
  * Description: 嵌入标签设计与打印工具；把 PDF 解析／条码解码服务反向代理到 VPS 回环端口 8632（不暴露公网），支持公开或登录访问。打印仍走操作员本机的打印服务。
- * Version:     1.0.39
+ * Version:     1.0.40
  * Author:      mrocioa
  * Text Domain: labeltool
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('LABELTOOL_VER', '1.0.39');
+define('LABELTOOL_VER', '1.0.40');
 define('LABELTOOL_DIR', plugin_dir_path(__FILE__));
 define('LABELTOOL_URL', plugin_dir_url(__FILE__));
 define('LABELTOOL_TEMPLATE_POST_TYPE', 'labeltool_template');
@@ -177,7 +177,10 @@ function labeltool_template_validate($template) {
 function labeltool_template_summary($post) {
     return array(
         'id'       => (int) $post->ID,
-        'name'     => get_the_title($post),
+        // REST JSON must use the stored title. get_the_title() runs
+        // wptexturize(), which turns dimensions such as 100x70 into the
+        // literal entity string "100&#215;70" in a JSON response.
+        'name'     => (string) $post->post_title,
         'size'     => (string) get_post_meta($post->ID, '_labeltool_size', true),
         'elements' => (int) get_post_meta($post->ID, '_labeltool_elements', true),
         'modified' => mysql_to_rfc3339($post->post_modified_gmt ?: $post->post_date_gmt),
@@ -226,7 +229,7 @@ function labeltool_template_get(WP_REST_Request $req) {
     if (!is_array($template)) {
         return labeltool_template_error('在线模板数据损坏', 500);
     }
-    $template['name'] = get_the_title($post);
+    $template['name'] = (string) $post->post_title;
 
     $response = new WP_REST_Response(array(
         'ok'       => true,
