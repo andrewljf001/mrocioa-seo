@@ -4,9 +4,9 @@
 
 - 独立产品目录：`../mrocioa-label-tool/`（相对于工作区根目录）
 - 私有 GitHub 仓库：`https://github.com/andrewljf001/mrocioa-label-tool`
-- 当前正式产品版本：`1.0.13`
-- 当前网站部署来源提交：`a8cfcc8`
-- 当前网站部署来源标签：`label-tool-v1.0.13`
+- 当前正式产品版本：`1.0.38`
+- 当前网站部署来源提交：`5d5533b4b554729de1eb1f33863a2745fe65db5b`
+- 当前网站部署来源标签：`label-tool-v1.0.38`
 - 线上页面：`https://mrocioa.com/label-printing-tool/`
 
 ## 本网站仓库保留的部署文件
@@ -36,4 +36,3 @@
 6. 本地验收并备份后再部署 VPS。
 
 紧急生产修复也必须回到独立产品仓库形成可追溯版本，不能只在 VPS 或网站副本中修改。
-

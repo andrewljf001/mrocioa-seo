@@ -1,7 +1,9 @@
 # WordPress deployment source
 
-This directory contains the public, deployable source synchronized from the
-MROCIOA production VPS. The VPS is the authoritative source.
+This directory contains the public, deployable source synchronized with the
+MROCIOA production VPS. Product-specific upstream repositories are the
+authoritative source for the Serial Tool and Label Tool; this directory keeps
+their approved deployment snapshots.
 
 ## Path mapping
 
