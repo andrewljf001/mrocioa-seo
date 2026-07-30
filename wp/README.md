@@ -18,8 +18,8 @@ licensed parent-theme/plugin packages, uploads, caches, generated backups and
 private credentials are intentionally excluded.
 
 See `VPS-SOURCE-SHA256.txt` for production checksums. The base WordPress
-snapshot was captured 2026-07-18; Label Tool production files were captured
-2026-07-26.
+snapshot was captured 2026-07-18; Label Tool production files were last
+synchronized and verified on 2026-07-30.
 
 The Web Serial Debugger files in `woodmart-child/` are release deployment
 copies. Product development, tests and release governance belong to the

@@ -392,6 +392,110 @@ document.addEventListener('DOMContentLoaded', async function() {
       }
     }
 
+    // Barcode human-readable text alignment is an element property. Keep the
+    // existing centered default for older labels, expose the control only
+    // while the text is enabled, and use the same value in preview and every
+    // canvas-backed print/export path.
+    const barcodeTextAlignmentPatches = [
+      [
+        '                  <div style="text-align:center; line-height:1.15; font-family:{{ le.bFam }}; font-size:{{ le.bFs }}; font-weight:{{ le.bFw }}; font-style:{{ le.bFst }}; color:{{ le.bCol }};">{{ le.bTxt }}</div>',
+        '                  <div style="position:absolute; top:calc(100% + {{ le.bGap }}); left:{{ le.bLeft }}; transform:{{ le.bTr }}; width:{{ le.bTw }}; white-space:nowrap; text-align:{{ le.bTa }}; line-height:{{ le.bLh }}; font-family:{{ le.bFam }}; font-size:{{ le.bFs }}; font-weight:{{ le.bFw }}; font-style:{{ le.bFst }}; color:{{ le.bCol }};">{{ le.bTxt }}</div>'
+      ],
+      [
+        '          <sc-if value="{{ pBTxtOn }}" hint-placeholder-val="{{ false }}">\n' +
+        '            <div><div style="color:#7c96a4; margin-bottom:4px;">字体 FONT</div>',
+        [
+          '          <sc-if value="{{ pBTxtOn }}" hint-placeholder-val="{{ false }}">',
+          '            <div><div style="color:#7c96a4; margin-bottom:4px;">下方文字对齐 TEXT ALIGN</div>',
+          '              <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:5px;">',
+          '                <sc-for list="{{ btaList }}" as="ba" hint-placeholder-count="3">',
+          '                  <span sc-camel-on-click="{{ ba.fn }}" style="cursor:pointer; text-align:center; padding:5px 0; border:1px solid {{ ba.b }}; background:{{ ba.bg }}; color:{{ ba.c }}; font-size:10px;">{{ ba.t }}</span>',
+          '                </sc-for>',
+          '              </div>',
+          '            </div>',
+          '            <div><div style="color:#7c96a4; margin-bottom:4px;">字体 FONT</div>'
+        ].join('\n')
+      ],
+      [
+        "      pBTxtOn: sel.type === 'barcode' && !!sel.txt,\n" +
+        "      pBTpt: this.nbGet('btpt', sel.tpt || 9),",
+        [
+          "      pBTxtOn: sel.type === 'barcode' && !!sel.txt,",
+          "      btaList: [['left', '⇤ 左'], ['center', '↔ 居中'], ['right', '右 ⇥']].map(([a, t]) => { const on = (sel.bta || 'center') === a; return { t, fn: () => upd({ bta: a, btoff: 0 }), b: on ? '#7cc4ff' : '#23304a', c: on ? '#060a0e' : '#7c96a4', bg: on ? '#7cc4ff' : 'transparent' }; }),",
+          "      pBTpt: this.nbGet('btpt', sel.tpt || 9),"
+        ].join('\n')
+      ],
+      [
+        "return { ...base, isBar: true, w: wpx, h: hpx, ref: (n) => this.attachBar(n, val, el, wpx, hpx), bTxt: el.txt ? val : '', bFs:",
+        "return { ...base, isBar: true, w: wpx, h: hpx, ref: (n) => this.attachBar(n, val, el, wpx, hpx), bTxt: el.txt ? val : '', bTa: el.bta || 'center', bGap: ((el.btgap ?? 0.4) * scale) + 'px', bLeft: 'calc(' + ((el.bta || 'center') === 'left' ? '0%' : ((el.bta || 'center') === 'right' ? '100%' : '50%')) + ' + ' + ((el.btoff || 0) * scale) + 'px)', bTr: (el.bta || 'center') === 'left' ? 'none' : ((el.bta || 'center') === 'right' ? 'translateX(-100%)' : 'translateX(-50%)'), bTw: el.btw ? (el.btw * scale) + 'px' : 'max-content', bLh: el.blh || 1.15, bFs:"
+      ],
+      [
+        "bFam: this.bcFont(el), bFw: el.bbold ? 700 : 500, bFst:",
+        "bFam: this.bcFont(el), bFw: el.bwt || (el.bbold ? 700 : 500), bFst:"
+      ],
+      [
+        "if (el.txt) { const dfs = (el.tpt || 9) * 0.3528 * dpmm; ctx.font = (el.bit ? 'italic ' : '') + (el.bbold ? '700 ' : '500 ') + dfs + 'px ' + this.bcFont(el); ctx.textAlign = 'center'; ctx.textBaseline = 'top'; ctx.fillStyle = '#000'; ctx.fillText(elv(el), (el.x + el.w / 2) * dpmm, (el.y + el.h) * dpmm + dpmm * 0.4); ctx.textAlign = 'left'; }",
+        "if (el.txt) { const dfs = (el.tpt || 9) * 0.3528 * dpmm, bta = el.bta || 'center', btx = (bta === 'left' ? el.x : (bta === 'right' ? el.x + el.w : el.x + el.w / 2)) + (el.btoff || 0), btgap = el.btgap ?? 0.4; ctx.font = (el.bit ? 'italic ' : '') + (el.bwt || (el.bbold ? 700 : 500)) + ' ' + dfs + 'px ' + this.bcFont(el); ctx.textAlign = bta; ctx.textBaseline = 'top'; ctx.fillStyle = el.bcolor || '#000'; ctx.fillText(elv(el), btx * dpmm, (el.y + el.h + btgap) * dpmm); ctx.textAlign = 'left'; }"
+      ],
+      [
+        "else if (e.type === 'barcode') layers.code.push({ type: 'barcode', v: e.v, fmt: e.fmt || 'CODE128', raw: e.raw || '', txt: e.txt !== false, x: e.x, y: e.y, w: e.w, h: e.h });",
+        "else if (e.type === 'barcode') layers.code.push({ type: 'barcode', v: e.v, fmt: e.fmt || 'CODE128', raw: e.raw || '', txt: e.txt !== false, bta: e.bta || 'center', btoff: e.btoff, btgap: e.btgap, btw: e.btw, bth: e.bth, blh: e.blh, tpt: e.tpt, bfam: e.bfam, bwt: e.bwt, bbold: e.bbold, bit: e.bit, bcolor: e.bcolor, x: e.x, y: e.y, w: e.w, h: e.h });"
+      ],
+      [
+        "  bcFontOpt(src) { return ((src && src.bbold) ? 'bold ' : '') + ((src && src.bit) ? 'italic' : '').trim() || ''; }\n  attachBar",
+        "  bcFontOpt(src) { return ((src && src.bbold) ? 'bold ' : '') + ((src && src.bit) ? 'italic' : '').trim() || ''; }\n  bcPrintTextStyle(src) {\n    const a = src.bta || 'center', off = src.btoff || 0, gap = src.btgap ?? 0.4;\n    const anchor = a === 'left' ? ('left:' + off + 'mm;') : (a === 'right' ? ('left:calc(100% + ' + off + 'mm);transform:translateX(-100%);') : ('left:calc(50% + ' + off + 'mm);transform:translateX(-50%);'));\n    return 'position:absolute;top:' + (src.h + gap) + 'mm;' + anchor + 'width:' + (src.btw ? src.btw + 'mm' : 'max-content') + ';white-space:nowrap;text-align:' + a + ';line-height:' + (src.blh || 1.15) + ';font-family:' + this.bcFont(src) + ';font-style:' + (src.bit ? 'italic' : 'normal') + ';font-weight:' + (src.bwt || (src.bbold ? 700 : 500)) + ';font-size:' + ((src.tpt || 9) * 0.3528) + 'mm;color:' + (src.bcolor || '#000') + ';';\n  }\n  attachBar"
+      ],
+      [
+        `(el.txt ? '<div style="text-align:center;line-height:1.15;font-family:' + this.bcFont(el) + ';font-style:' + (el.bit ? 'italic' : 'normal') + ';font-weight:' + (el.bbold ? 700 : 500) + ';font-size:' + ((el.tpt || 9) * 0.3528) + 'mm;color:' + (el.bcolor || '#000') + ';">' + subst(el) + '</div>' : '')`,
+        `(el.txt ? '<div style="' + this.bcPrintTextStyle(el) + '">' + subst(el) + '</div>' : '')`
+      ],
+      [
+        "      togBBold: () => upd({ bbold: !sel.bbold }), bbC: sel.bbold ? '#0b0e14' : '#7c96a4', bbBg: sel.bbold ? 'linear-gradient(90deg,#00e5ff,#a06bff)' : 'transparent', bbB: sel.bbold ? '#7cc4ff' : '#23304a',",
+        "      togBBold: () => { const on = !((sel.bwt || (sel.bbold ? 700 : 500)) >= 600); upd({ bbold: on, bwt: on ? 700 : 400 }); }, bbC: (sel.bwt || (sel.bbold ? 700 : 500)) >= 600 ? '#0b0e14' : '#7c96a4', bbBg: (sel.bwt || (sel.bbold ? 700 : 500)) >= 600 ? 'linear-gradient(90deg,#00e5ff,#a06bff)' : 'transparent', bbB: (sel.bwt || (sel.bbold ? 700 : 500)) >= 600 ? '#7cc4ff' : '#23304a',"
+      ],
+      [
+        "      addTBar: () => addEl({ type: 'barcode', v: '12345678', x: 6, y: 10, w: 40, h: 8, xd: 2 }),",
+        "      addTBar: () => addEl({ type: 'barcode', v: '12345678', x: 6, y: 10, w: 40, h: 8, xd: 2, bta: 'center' }),"
+      ],
+      [
+        '"X-DIM 模块宽（300dpi 点）": "X-DIM module width (300dpi dots)", "2D 码制 FORMAT": "2D FORMAT", "条码下方显示数字": "Show digits below barcode",',
+        '"X-DIM 模块宽（300dpi 点）": "X-DIM module width (300dpi dots)", "2D 码制 FORMAT": "2D FORMAT", "条码下方显示数字": "Show digits below barcode", "下方文字对齐 TEXT ALIGN": "HUMAN-READABLE ALIGN", "↔ 居中": "↔ Center",'
+      ]
+    ];
+    for (const [patchIndex, [sourceCode, alignedCode]] of barcodeTextAlignmentPatches.entries()) {
+      if (template.includes(sourceCode)) {
+        template = template.replace(sourceCode, alignedCode);
+      } else {
+        console.warn('Barcode text alignment target #' + (patchIndex + 1) + ' was not found.');
+      }
+    }
+
+    // A decoded barcode is editable only after the PDF service verifies that
+    // the regenerated 1D module pattern matches the source. Otherwise the
+    // service returns a transparent original-region image and marks it as a
+    // deliberate fallback, so the existing client-side vectorizer must not
+    // convert it again.
+    const barcodeFallbackPatches = [
+      [
+        "    this.reportFonts(j.elements || []);",
+        [
+          "    this.reportFonts(j.elements || []);",
+          "    (j.elements || []).filter((e) => e.codeFallback).forEach((e) => this.prnLog('条码未通过 1:1 校验，已保留原图 · ' + (e.fallbackReason || 'fallback'), true));"
+        ].join('\n')
+      ],
+      [
+        `    this.prnLog('1:1 重建完成（后端）· 文字 ' + (t2.text || 0) + ' / 线框 ' + (t2.rect || 0) + ' / 码 ' + (t2.code || 0) + ' / 矢量图形 ' + (t2.vector || 0) + ' / 位图 ' + (t2.image || 0) + ' · 叠底对照＝「底图 ON/OFF」');`,
+        `    this.prnLog('1:1 重建完成（后端）· 文字 ' + (t2.text || 0) + ' / 线框 ' + (t2.rect || 0) + ' / 码 ' + (t2.code || 0) + ((t2.codeFallback || 0) ? ' / 条码原图降级 ' + t2.codeFallback : '') + ' / 矢量图形 ' + (t2.vector || 0) + ' / 位图 ' + (t2.image || 0) + ' · 叠底对照＝「底图 ON/OFF」');`
+      ]
+    ];
+    for (const [patchIndex, [sourceCode, fallbackCode]] of barcodeFallbackPatches.entries()) {
+      if (template.includes(sourceCode)) {
+        template = template.replace(sourceCode, fallbackCode);
+      } else {
+        console.warn('Barcode fallback target #' + (patchIndex + 1) + ' was not found.');
+      }
+    }
+
     // Nested page bundles (iframe targets). Each ships ONCE, in the ROOT
     // document's manifest; frame srcs carry an about:blank#<uuid> marker
     // instead of a substitutable uuid. Every document mints the blobs for

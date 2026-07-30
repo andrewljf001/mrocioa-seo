@@ -2,14 +2,14 @@
 /**
  * Plugin Name: 标签打印工具 Label Tool
  * Description: 嵌入标签设计与打印工具；把 PDF 解析／条码解码服务反向代理到 VPS 回环端口 8632（不暴露公网），支持公开或登录访问。打印仍走操作员本机的打印服务。
- * Version:     1.0.41
+ * Version:     1.0.43
  * Author:      mrocioa
  * Text Domain: labeltool
  */
 
 if (!defined('ABSPATH')) exit;
 
-define('LABELTOOL_VER', '1.0.41');
+define('LABELTOOL_VER', '1.0.43');
 define('LABELTOOL_DIR', plugin_dir_path(__FILE__));
 define('LABELTOOL_URL', plugin_dir_url(__FILE__));
 define('LABELTOOL_TEMPLATE_POST_TYPE', 'labeltool_template');

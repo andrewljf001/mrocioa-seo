@@ -68,6 +68,24 @@ def _fam(font):
     return "sans"
 
 
+def _barcode_font_key(font, family):
+    """Map a PDF/PostScript font name to the editor's shared font list."""
+    raw = (font or "").split("+")[-1]
+    flat = raw.lower().replace(" ", "").replace("-", "").replace("_", "")
+    for needle, key in (
+        ("microsoftyahei", "yahei"), ("yahei", "yahei"),
+        ("arial", "Arial"), ("helvetica", "Helvetica"),
+        ("verdana", "Verdana"), ("tahoma", "Tahoma"),
+        ("timesnewroman", "Times New Roman"), ("timesroman", "Times New Roman"),
+        ("georgia", "Georgia"), ("couriernew", "Courier New"),
+        ("courier", "Courier New"), ("simhei", "SimHei"),
+        ("simsun", "SimSun"), ("pingfang", "PingFang SC"),
+    ):
+        if needle in flat:
+            return key
+    return family if family in ("mono", "sans", "serif", "yahei") else "sans"
+
+
 def _pts(it):
     out = []
     for v in it[1:]:
@@ -286,11 +304,14 @@ def page_to_label(page):
                     "v": s,
                     "x": round(x0 * K, 2), "y": round(ty * K, 2),
                     "w": round((x1 - x0) * K, 2), "h": round((y1 - y0) * K, 2),
+                    "rbox": [round(x0 * K, 2), round(y0 * K, 2),
+                             round((x1 - x0) * K, 2), round((y1 - y0) * K, 2)],
                     "fs": round(size * K, 2),
                     "ff": sp.get("font", ""),
                     "fam": _fam(sp.get("font", "")),
                     "color": _color_hex(sp.get("color", 0)),
                     "bold": bool(sp.get("flags", 0) & 16) or "bold" in (sp.get("font", "").lower()),
+                    "italic": bool(sp.get("flags", 0) & 2) or "italic" in (sp.get("font", "").lower()),
                     "wt": _weight(sp.get("font", ""), sp.get("flags", 0)),
                 })
     return svg, texts
@@ -422,6 +443,190 @@ def page_rebuild(doc, page):
     els = []
 
     shapes_all, vecboxes = classify_drawings(page)
+    _, texts = page_to_label(page)
+
+    def readable_text_match(value, bx, by, bw, bh):
+        """Find the original human-readable caption belonging to a barcode."""
+        target = "".join(ch for ch in str(value or "") if ch.isalnum()).lower()
+        if not target:
+            return None
+        best = None
+        for t in texts:
+            shown = "".join(ch for ch in str(t.get("v") or "") if ch.isalnum()).lower()
+            if shown != target:
+                continue
+            tx, ty, tw, th = t["x"], t["y"], t["w"], t["h"]
+            # Human-readable text normally starts in the lower half of the
+            # decoded region or immediately below it.
+            if ty + th / 2 < by + bh * 0.45 or ty > by + bh + max(6.0, th * 3):
+                continue
+            overlap = max(0.0, min(tx + tw, bx + bw) - max(tx, bx))
+            if overlap <= 0:
+                continue
+            vertical = abs((ty + th / 2) - (by + bh))
+            if best is None or vertical < best[0]:
+                best = (vertical, t)
+        return best[1] if best else None
+
+    def readable_text_style(value, bx, by, bw, bh, text=None):
+        """Rebuild the barcode caption's placement and typography from the PDF."""
+        text = text or readable_text_match(value, bx, by, bw, bh)
+        if text is None:
+            return {"bta": "center"}
+        tx, ty, tw, th = text["x"], text["y"], text["w"], text["h"]
+        anchors = {
+            "left": abs(tx - bx),
+            "center": abs((tx + tw / 2) - (bx + bw / 2)),
+            "right": abs((tx + tw) - (bx + bw)),
+        }
+        align = min(anchors, key=anchors.get)
+        if align == "left":
+            offset = tx - bx
+        elif align == "right":
+            offset = (tx + tw) - (bx + bw)
+        else:
+            offset = (tx + tw / 2) - (bx + bw / 2)
+        weight = int(text.get("wt", 400) or 400)
+        return {
+            "bta": align,
+            "btoff": round(offset, 2),
+            "btgap": round(ty - (by + bh), 2),
+            "btw": round(tw, 2),
+            "bth": round(th, 2),
+            "blh": round(max(0.8, min(1.8, th / max(text.get("fs", 1), 0.1))), 3),
+            "tpt": round(text.get("fs", 3.175) / (25.4 / 72.0), 2),
+            "bfam": _barcode_font_key(text.get("ff", ""), text.get("fam", "sans")),
+            "bwt": weight,
+            "bbold": weight >= 600,
+            "bit": bool(text.get("italic")),
+            "bcolor": text.get("color") or "#000000",
+        }
+
+    # Cache embedded-image placement before decoding. Raster barcodes should
+    # use their exact PDF placement box instead of ZXing's approximate ink box.
+    img_boxes = []
+    try:
+        for info in page.get_image_info(xrefs=True):
+            ix0, iy0, ix1, iy1 = [v * K for v in info["bbox"]]
+            if (ix1 - ix0) > 1 and (iy1 - iy0) > 1:
+                img_boxes.append({"x": ix0, "y": iy0, "w": ix1 - ix0, "h": iy1 - iy0,
+                                  "xref": info.get("xref", 0)})
+    except Exception:
+        pass
+
+    def matched_barcode_image(box):
+        x, y, w, h = box
+        if w <= 0 or h <= 0:
+            return None
+        best = None
+        for item in img_boxes:
+            ix, iy, iw, ih = item["x"], item["y"], item["w"], item["h"]
+            ox = max(0.0, min(x + w, ix + iw) - max(x, ix))
+            oy = max(0.0, min(y + h, iy + ih) - max(y, iy))
+            overlap = ox * oy
+            if overlap / max(w * h, 0.01) < 0.7:
+                continue
+            # Do not snap a code to a large photographic/page image.
+            if iw > w * 2.5 + 1.0 or ih > h * 1.8 + 1.0:
+                continue
+            score = abs(ix - x) + abs(iy - y) + abs(iw - w) + abs(ih - h)
+            if best is None or score < best[0]:
+                best = (score, item)
+        return best[1] if best else None
+
+    def pixmap_image(pix, mode="L"):
+        import io
+        return Image.open(io.BytesIO(pix.tobytes("png"))).convert(mode)
+
+    def render_box_image(box, dpi=600, mode="L"):
+        x, y, w, h = box
+        clip = fitz.Rect(x / K, y / K, (x + w) / K, (y + h) / K)
+        pix = page.get_pixmap(matrix=fitz.Matrix(dpi / 72.0, dpi / 72.0),
+                              clip=clip, alpha=(mode == "RGBA"))
+        return pixmap_image(pix, mode)
+
+    def source_barcode_image(source, box):
+        if source and source.get("xref"):
+            try:
+                return pixmap_image(fitz.Pixmap(doc, source["xref"]), "L")
+            except Exception:
+                pass
+        try:
+            return render_box_image(box, 600, "L")
+        except Exception:
+            return None
+
+    def barcode_signature(image):
+        """Return the most barcode-like horizontal row as a black/white pattern."""
+        if image is None:
+            return None
+        gray = image.convert("L")
+        best = None
+        for y in range(gray.height):
+            bits = [gray.getpixel((x, y)) < 160 for x in range(gray.width)]
+            black = sum(bits)
+            if black < max(2, gray.width * 0.05) or black > gray.width * 0.95:
+                continue
+            transitions = sum(bits[x] != bits[x - 1] for x in range(1, len(bits)))
+            score = (transitions, black)
+            if best is None or score > best[0]:
+                best = (score, bits)
+        return best[1] if best else None
+
+    def editable_barcode_match(value, raw_format, sym, source_image):
+        """Only return editable when the regenerated 1D module pattern matches."""
+        supported = {"CODE128", "CODE39", "EAN13", "EAN8", "ITF"}
+        if sym not in supported:
+            return False, None, "unsupported editable format"
+        try:
+            fmt = zxingcpp.barcode_format_from_str(raw_format)
+            code = zxingcpp.create_barcode(value, fmt)
+            generated = Image.fromarray(zxingcpp.write_barcode_to_image(
+                code, scale=1, add_hrt=False, add_quiet_zones=False)).convert("L")
+        except Exception:
+            return False, None, "encoder unavailable"
+        source_bits = barcode_signature(source_image)
+        generated_bits = barcode_signature(generated)
+        if not source_bits or not generated_bits:
+            return False, None, "module pattern unavailable"
+
+        def resize_bits(bits, width):
+            return [bits[min(len(bits) - 1, int((x + 0.5) * len(bits) / width))]
+                    for x in range(width)]
+
+        expected = resize_bits(generated_bits, len(source_bits))
+        mismatches = sum(a != b for a, b in zip(source_bits, expected))
+        ratio = mismatches / max(1, len(source_bits))
+        src_transitions = sum(source_bits[x] != source_bits[x - 1]
+                              for x in range(1, len(source_bits)))
+        gen_transitions = sum(generated_bits[x] != generated_bits[x - 1]
+                              for x in range(1, len(generated_bits)))
+        ok = ratio <= 0.01 and src_transitions == gen_transitions
+        return ok, round(ratio, 4), "module mismatch" if not ok else "verified"
+
+    def union_box(bar_box, caption):
+        x, y, w, h = bar_box
+        x1, y1 = x + w, y + h
+        if caption:
+            tx, ty, tw, th = caption.get("rbox") or [
+                caption["x"], caption["y"], caption["w"], caption["h"]]
+            x, y = min(x, tx), min(y, ty)
+            x1, y1 = max(x1, tx + tw), max(y1, ty + th)
+        return (round(x, 2), round(y, 2), round(x1 - x, 2), round(y1 - y, 2))
+
+    def transparent_region_uri(box):
+        import io
+        try:
+            image = render_box_image(box, 600, "RGBA")
+            pixels = getattr(image, "get_flattened_data", image.getdata)
+            px = list(pixels())
+            image.putdata([(r, g, b, 0 if min(r, g, b) >= 250 else a)
+                           for r, g, b, a in px])
+            out = io.BytesIO()
+            image.save(out, format="PNG")
+            return "data:image/png;base64," + base64.b64encode(out.getvalue()).decode()
+        except Exception:
+            return None
 
     codes = []
     if HAS_ZX:
@@ -430,6 +635,8 @@ def page_rebuild(doc, page):
         except Exception:
             codes = []
     code_boxes = []
+    fallback_boxes = []
+    code_fallback_count = 0
     for c in codes:
         sym = _fmt_symbology(c.get("format", ""))
         raw = c.get("format", "")
@@ -441,20 +648,46 @@ def page_rebuild(doc, page):
         ratio = box[2] / box[3] if box[3] else 9
         if not two_d and not raw and 0.75 <= ratio <= 1.35 and len(c.get("text", "")) > 16:
             sym, two_d = "QR", True
-        # 解码器给的框量到最外那根条的中心线，不含它自身的半个线宽
-        # → 四边各外扩「半个模块宽 + 0.1mm」，首尾条/外圈模块才不会被当成独立线条
         mod = _measured_module(shapes_all, box) or _module_mm(c.get("text", ""), sym, box[2], box[3])
-        pad = mod / 2.0 + 0.1
-        code_boxes.append(box + (pad,))
-        # 元素本身也取外沿尺寸（含首尾半个线宽），才与原码宽度一致
-        bx, by = round(box[0] - mod / 2.0, 2), round(box[1] - mod / 2.0, 2)
-        bw, bh = round(box[2] + mod, 2), round(box[3] + mod, 2)
+        source_box = matched_barcode_image(box)
+        if source_box:
+            # Embedded barcode: the PDF placement is the 1:1 source of truth.
+            bx, by, bw, bh = [round(source_box[k], 2) for k in ("x", "y", "w", "h")]
+            pad = 0.1
+        else:
+            # Vector barcode: ZXing reports outer bar centre-lines, so include
+            # half a measured module on every side.
+            pad = mod / 2.0 + 0.1
+            bx, by = round(box[0] - mod / 2.0, 2), round(box[1] - mod / 2.0, 2)
+            bw, bh = round(box[2] + mod, 2), round(box[3] + mod, 2)
         if two_d:
+            code_boxes.append((bx, by, bw, bh, pad))
             els.append({"type": "qr", "q2": sym, "v": c["text"], "raw": raw,
                         "x": bx, "y": by, "w": bw, "h": bh})
         else:
-            els.append({"type": "barcode", "fmt": sym, "txt": True, "v": c["text"], "raw": raw,
-                        "x": bx, "y": by, "w": bw, "h": bh})
+            caption = readable_text_match(c["text"], bx, by, bw, bh)
+            source_image = source_barcode_image(source_box, (bx, by, bw, bh))
+            verified, verify_diff, verify_reason = editable_barcode_match(
+                c["text"], raw, sym, source_image)
+            if not verified:
+                fallback_box = union_box((bx, by, bw, bh), caption)
+                uri = transparent_region_uri(fallback_box)
+                if uri:
+                    els.append({"type": "image", "uri": uri, "cand": False,
+                                "codeFallback": True, "fallbackReason": verify_reason,
+                                "x": fallback_box[0], "y": fallback_box[1],
+                                "w": fallback_box[2], "h": fallback_box[3]})
+                    code_boxes.append(fallback_box + (0.1,))
+                    fallback_boxes.append(fallback_box + (0.1,))
+                    code_fallback_count += 1
+                    continue
+            code_boxes.append((bx, by, bw, bh, pad))
+            barcode = {"type": "barcode", "fmt": sym, "txt": bool(caption),
+                       "v": c["text"], "raw": raw,
+                       "x": bx, "y": by, "w": bw, "h": bh,
+                       "verified": bool(verified), "verifyDiff": verify_diff}
+            barcode.update(readable_text_style(c["text"], bx, by, bw, bh, caption))
+            els.append(barcode)
         # 测量校验框（黄色虚线、不打印）：看量到的模块宽/外沿对不对
         els.append({"type": "dbgbox", "x": bx, "y": by, "w": bw, "h": bh,
                     "note": "mod=%.3fmm" % mod})
@@ -486,16 +719,6 @@ def page_rebuild(doc, page):
             if vx0 - 0.5 <= cx <= vx1 + 0.5 and vy0 - 0.5 <= cy <= vy1 + 0.5:
                 return True
         return False
-
-    # 嵌入位图区域（码图等）—— 压在它下面的文字在原档里看不见，不能重建成可见大字
-    img_boxes = []
-    try:
-        for info in page.get_image_info(xrefs=True):
-            ix0, iy0, ix1, iy1 = [v * K for v in info["bbox"]]
-            if (ix1 - ix0) > 1 and (iy1 - iy0) > 1:
-                img_boxes.append((ix0, iy0, ix1 - ix0, iy1 - iy0))
-    except Exception:
-        pass
 
     def inside_box(boxes, bx, by, bw, bh):
         """图元必须整体落在码框内才算码的一部分（包在码外面的框不会被误删）。"""
@@ -535,13 +758,14 @@ def page_rebuild(doc, page):
         # 与 logo 等位图并排/相邻的文字照常生成，靠图层顺序盖在位图之上
         return overlaps_code(bx, by, bw, bh) and is_code_fragment(s)
 
-    _, texts = page_to_label(page)
     for t in texts:
         s = (t["v"] or "").strip()
         if not s:
             continue
         if s in code_vals or "".join(ch for ch in s if ch.isalnum()) in code_vals:
             continue  # 人眼可读行，由码元素自带
+        if inside_box(fallback_boxes, t["x"], t["y"], t["w"], t["h"]):
+            continue  # 条码降级图已经保留该区域的原始文字
         if in_code(t["x"], t["y"], t["w"], t["h"], s):
             continue  # 被码/位图遮住的隐藏文字
         if in_vec(t["x"], t["y"], t["w"], t["h"]):
@@ -551,11 +775,23 @@ def page_rebuild(doc, page):
                     "wt": t.get("wt", 400),
                     "color": t["color"], "mw": t["w"], "mh": t["h"]})
 
+    def is_page_background(s):
+        """A near-page-size white fill is canvas background, not label artwork."""
+        if s["kind"] == "rect" or str(s.get("color", "")).lower() not in ("#fff", "#ffffff", "white"):
+            return False
+        sx0, sy0 = s["x"], s["y"]
+        sx1, sy1 = sx0 + s["w"], sy0 + s["h"]
+        cover_w = max(0.0, min(sx1, pw) - max(sx0, 0.0))
+        cover_h = max(0.0, min(sy1, ph) - max(sy0, 0.0))
+        return cover_w >= pw * 0.97 and cover_h >= ph * 0.97
+
     for s in shapes:
         if in_vec(s["x"], s["y"], s["w"], s["h"]):
             continue
         if inside_box(code_boxes, s["x"], s["y"], s["w"], s["h"]):
             continue  # 码本体的条/模块 → 由可编辑码元素代替
+        if is_page_background(s):
+            continue  # PDF 画布白底 → 重建为透明画布
         els.append({"type": "rect", "x": s["x"], "y": s["y"], "w": s["w"], "h": s["h"],
                     "th": s["th"], "rd": s.get("rd", 0), "fill": s["kind"] != "rect",
                     "color": s["color"], "kind": s["kind"]})
@@ -627,6 +863,7 @@ def page_rebuild(doc, page):
         "code": len([e for e in els if e["type"] in ("barcode", "qr")]),
         "vector": len([e for e in els if e["type"] == "vector"]),
         "image": len([e for e in els if e["type"] == "image"]),
+        "codeFallback": code_fallback_count,
     }
     return {"paper": {"w": round(pw, 2), "h": round(ph, 2)},
             "elements": els, "overlay": overlay, "stat": stat}
